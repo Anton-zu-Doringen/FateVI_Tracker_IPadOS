@@ -18,6 +18,7 @@
 		A00000000000000000000019 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000009 /* Assets.xcassets */; };
 		A0000000000000000000001A /* CombatRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000000B /* CombatRules.swift */; };
 		A0000000000000000000001B /* PixelsBluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000000C /* PixelsBluetoothService.swift */; };
+		A0000000000000000000001C /* CombatPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000000D /* CombatPersistence.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		A0000000000000000000000A /* FateVI_Tracker_IPadOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = FateVI_Tracker_IPadOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A0000000000000000000000B /* CombatRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombatRules.swift; sourceTree = "<group>"; };
 		A0000000000000000000000C /* PixelsBluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelsBluetoothService.swift; sourceTree = "<group>"; };
+		A0000000000000000000000D /* CombatPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombatPersistence.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -64,6 +66,7 @@
 				A00000000000000000000003 /* DesignSystem.swift */,
 				A00000000000000000000004 /* AppState.swift */,
 				A0000000000000000000000B /* CombatRules.swift */,
+				A0000000000000000000000D /* CombatPersistence.swift */,
 				A00000000000000000000005 /* RootView.swift */,
 				A00000000000000000000006 /* SidebarView.swift */,
 				A00000000000000000000007 /* CombatStageView.swift */,
@@ -150,6 +153,7 @@
 			files = (
 				A00000000000000000000014 /* AppState.swift in Sources */,
 				A0000000000000000000001A /* CombatRules.swift in Sources */,
+				A0000000000000000000001C /* CombatPersistence.swift in Sources */,
 				A00000000000000000000017 /* CombatStageView.swift in Sources */,
 				A00000000000000000000013 /* DesignSystem.swift in Sources */,
 				A00000000000000000000011 /* FateVI_Tracker_IPadOSApp.swift in Sources */,

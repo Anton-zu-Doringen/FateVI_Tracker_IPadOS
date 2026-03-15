@@ -53,10 +53,55 @@ struct RootView: View {
             ScrollView {
                 StageCard(title: "Pixels Bridge", subtitle: "Native iPadOS-Integration statt Browser-WebBluetooth") {
                     VStack(alignment: .leading, spacing: 14) {
+                        HStack(spacing: 10) {
+                            Button(pixelsService.isScanning ? "Scan stoppen" : "Scan starten") {
+                                if pixelsService.isScanning {
+                                    pixelsService.stopScanning()
+                                } else {
+                                    pixelsService.startScanning()
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+
+                            Button("Gemerkte verbinden") {
+                                pixelsService.reconnectKnownDevices()
+                            }
+                            .buttonStyle(.bordered)
+                        }
+
                         Text(pixelsService.status)
                             .foregroundStyle(Palette.mist)
                         Text("Diese Fläche wird zum nativen Dice-Hub für Discovery, Reconnect, Zuordnung und Rollfluss.")
                             .foregroundStyle(Palette.parchment)
+
+                        ForEach(pixelsService.devices) { device in
+                            HStack {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(device.name)
+                                        .foregroundStyle(Palette.parchment)
+                                    Text("\(device.stateDescription)\(device.rssi.map { " | RSSI \($0)" } ?? "")\(device.batteryLevel.map { " | Akku \($0)%" } ?? "")")
+                                        .font(.footnote)
+                                        .foregroundStyle(Palette.mist)
+                                }
+                                Spacer()
+                                if device.isConnected {
+                                    Button("Trennen") {
+                                        pixelsService.disconnect(device)
+                                    }
+                                    .buttonStyle(.bordered)
+                                } else {
+                                    Button("Verbinden") {
+                                        pixelsService.connect(device)
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                }
+                            }
+                            .padding(14)
+                            .background(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .fill(Palette.parchment.opacity(0.06))
+                            )
+                        }
                     }
                 }
                 .padding(24)
@@ -83,6 +128,38 @@ struct RootView: View {
                     }
                 }
                 .padding(24)
+
+                StageCard(title: "Lokale Kampfstände", subtitle: "JSON-Speicherung im App-Dokumentenordner") {
+                    VStack(alignment: .leading, spacing: 12) {
+                        ForEach(appState.savedScenes) { savedScene in
+                            HStack(alignment: .top) {
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(savedScene.name)
+                                        .foregroundStyle(Palette.parchment)
+                                    Text(savedScene.savedAt.formatted(date: .abbreviated, time: .shortened))
+                                        .font(.footnote)
+                                        .foregroundStyle(Palette.mist)
+                                }
+                                Spacer()
+                                Button("Laden") {
+                                    appState.loadScene(savedScene)
+                                }
+                                .buttonStyle(.borderedProminent)
+                                Button("Löschen") {
+                                    appState.deleteSavedScene(savedScene)
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                            .padding(14)
+                            .background(
+                                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                                    .fill(Palette.parchment.opacity(0.06))
+                            )
+                        }
+                    }
+                }
+                .padding(.horizontal, 24)
+                .padding(.bottom, 24)
             }
         }
     }

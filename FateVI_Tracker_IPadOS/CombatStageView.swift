@@ -25,18 +25,28 @@ struct CombatStageView: View {
                 Button("Neue Figur") {
                 }
                 .buttonStyle(.bordered)
+
+                Button("Stand sichern") {
+                    appState.saveCurrentScene()
+                }
+                .buttonStyle(.bordered)
             }
         }
     }
 
     private var stageHeader: some View {
         StageCard(title: appState.scene.title, subtitle: "iPad-Kampfbühne mit Fokus auf Lesbarkeit am Tisch") {
-            HStack(alignment: .top, spacing: 18) {
-                statPill(title: "Kampfrunde", value: "\(appState.scene.round)")
-                statPill(title: "SC", value: "\(appState.pcsCount)")
-                statPill(title: "NSC", value: "\(appState.npcsCount)")
-                statPill(title: "Bereit", value: "\(appState.readyCombatantsCount)")
-                Spacer(minLength: 0)
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(alignment: .top, spacing: 18) {
+                    statPill(title: "Kampfrunde", value: "\(appState.scene.round)")
+                    statPill(title: "SC", value: "\(appState.pcsCount)")
+                    statPill(title: "NSC", value: "\(appState.npcsCount)")
+                    statPill(title: "Bereit", value: "\(appState.readyCombatantsCount)")
+                    Spacer(minLength: 0)
+                }
+                Text(appState.persistenceStatus)
+                    .font(.footnote)
+                    .foregroundStyle(Palette.mist)
             }
         }
     }

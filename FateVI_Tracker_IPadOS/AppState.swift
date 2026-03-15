@@ -1,13 +1,16 @@
 import Foundation
 import SwiftUI
 
+@MainActor
 final class CombatAppState: ObservableObject {
     @Published var activePanel: AppPanel = .combat
     @Published var selectedCombatantID: Combatant.ID?
     @Published var initiativeFilter: InitiativeFilter = .all
     @Published var scene: CombatSceneSnapshot
+    @Published var persistenceStatus: String = "Kampfspeicher wird vorbereitet."
 
     private var rules = InitiativeRuleEngine()
+    private let persistence = CombatPersistenceController()
 
     init() {
         let combatants = [
@@ -56,9 +59,16 @@ final class CombatAppState: ObservableObject {
             log: [CombatLogEntry(round: 0, message: "Neue Szene vorbereitet.")]
         )
 
-        self.scene = seededScene
-        self.selectedCombatantID = combatants.first?.id
-        startNextRound()
+        if let restoredScene = persistence.savedScenes.first?.snapshot {
+            self.scene = restoredScene
+            self.selectedCombatantID = restoredScene.combatants.first?.id
+            self.persistenceStatus = persistence.status
+        } else {
+            self.scene = seededScene
+            self.selectedCombatantID = combatants.first?.id
+            startNextRound()
+            saveCurrentScene(named: seededScene.title)
+        }
     }
 
     var selectedCombatant: Combatant? {
@@ -90,6 +100,10 @@ final class CombatAppState: ObservableObject {
         scene.combatants.filter { !$0.isIncapacitated }.count
     }
 
+    var savedScenes: [SavedCombatScene] {
+        persistence.savedScenes
+    }
+
     func selectCombatant(_ combatant: Combatant) {
         selectedCombatantID = combatant.id
     }
@@ -101,6 +115,7 @@ final class CombatAppState: ObservableObject {
         scene.combatants = resolution.combatants
         scene.initiative = resolution.initiative
         scene.log.append(contentsOf: resolution.log)
+        overwriteSavedScene()
     }
 
     func toggleCondition(_ condition: CombatCondition, for combatantID: UUID) {
@@ -113,6 +128,7 @@ final class CombatAppState: ObservableObject {
         let action = scene.combatants[index].conditions.contains(condition) ? "aktiviert" : "deaktiviert"
         scene.log.append(CombatLogEntry(round: scene.round, message: "\(scene.combatants[index].name): \(condition.rawValue) \(action)."))
         scene = scene
+        overwriteSavedScene()
     }
 
     func toggleWoundMark(for combatantID: UUID, at index: Int) {
@@ -121,5 +137,28 @@ final class CombatAppState: ObservableObject {
         let summary = scene.combatants[combatantIndex].woundSummary
         scene.log.append(CombatLogEntry(round: scene.round, message: "\(scene.combatants[combatantIndex].name): Wundmonitor geändert (\(summary))."))
         scene = scene
+        overwriteSavedScene()
+    }
+
+    func saveCurrentScene(named name: String? = nil) {
+        persistence.save(scene: scene, named: name)
+        persistenceStatus = persistence.status
+    }
+
+    func loadScene(_ savedScene: SavedCombatScene) {
+        guard let restoredScene = persistence.restore(sceneID: savedScene.id) else { return }
+        scene = restoredScene
+        selectedCombatantID = restoredScene.combatants.first?.id
+        persistenceStatus = persistence.status
+    }
+
+    func deleteSavedScene(_ savedScene: SavedCombatScene) {
+        persistence.delete(sceneID: savedScene.id)
+        persistenceStatus = persistence.status
+    }
+
+    private func overwriteSavedScene() {
+        persistence.overwriteMostRecent(scene: scene)
+        persistenceStatus = persistence.status
     }
 }

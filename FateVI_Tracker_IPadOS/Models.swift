@@ -107,7 +107,7 @@ struct Combatant: Identifiable, Codable, Hashable {
     }
 }
 
-struct InitiativeRoll: Identifiable, Hashable {
+struct InitiativeRoll: Identifiable, Codable, Hashable {
     let id: UUID
     let combatantID: UUID
     let combatantName: String
@@ -132,7 +132,7 @@ struct InitiativeResolution: Hashable {
     let actions: [CombatActionType]
 }
 
-struct CombatLogEntry: Identifiable, Hashable {
+struct CombatLogEntry: Identifiable, Codable, Hashable {
     let id: UUID
     let round: Int
     let timestamp: Date
@@ -146,7 +146,7 @@ struct CombatLogEntry: Identifiable, Hashable {
     }
 }
 
-struct CombatSceneSnapshot {
+struct CombatSceneSnapshot: Codable, Hashable {
     var title: String
     var round: Int
     var combatants: [Combatant]
