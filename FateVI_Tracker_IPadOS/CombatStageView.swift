@@ -9,6 +9,7 @@ struct CombatStageView: View {
                 stageHeader
                 rosterStrip
                 initiativeDeck
+                logDeck
             }
             .padding(24)
         }
@@ -17,7 +18,7 @@ struct CombatStageView: View {
         .toolbar {
             ToolbarItemGroup(placement: .topBarTrailing) {
                 Button("Nächste KR") {
-                    appState.advanceRoundPreview()
+                    appState.startNextRound()
                 }
                 .buttonStyle(.borderedProminent)
 
@@ -32,8 +33,9 @@ struct CombatStageView: View {
         StageCard(title: appState.scene.title, subtitle: "iPad-Kampfbühne mit Fokus auf Lesbarkeit am Tisch") {
             HStack(alignment: .top, spacing: 18) {
                 statPill(title: "Kampfrunde", value: "\(appState.scene.round)")
-                statPill(title: "SC", value: "\(appState.scene.combatants.filter { $0.role == .pc }.count)")
-                statPill(title: "NSC", value: "\(appState.scene.combatants.filter { $0.role == .npc }.count)")
+                statPill(title: "SC", value: "\(appState.pcsCount)")
+                statPill(title: "NSC", value: "\(appState.npcsCount)")
+                statPill(title: "Bereit", value: "\(appState.readyCombatantsCount)")
                 Spacer(minLength: 0)
             }
         }
@@ -64,8 +66,14 @@ struct CombatStageView: View {
                                 .font(.subheadline)
                                 .foregroundStyle(Palette.mist)
 
+                            if let totalInitiative = combatant.totalInitiative {
+                                Text("Aktuelle INI \(totalInitiative)")
+                                    .font(.caption.weight(.semibold))
+                                    .foregroundStyle(Palette.parchment.opacity(0.84))
+                            }
+
                             HStack(spacing: 8) {
-                                ForEach(Array(combatant.conditions), id: \.self) { condition in
+                                ForEach(Array(combatant.conditions).sorted(by: { $0.rawValue < $1.rawValue }), id: \.self) { condition in
                                     Text(condition.rawValue)
                                         .font(.caption2.weight(.semibold))
                                         .padding(.horizontal, 8)
@@ -111,6 +119,9 @@ struct CombatStageView: View {
                             Text(roll.action.rawValue)
                                 .font(.subheadline)
                                 .foregroundStyle(Palette.mist)
+                            Text("3W6 \(roll.rollTotal)\(roll.criticalBonusRoll.map { " + W6 \($0)" } ?? "")\(roll.isSurprised ? " | Überrascht" : "")")
+                                .font(.caption)
+                                .foregroundStyle(Palette.mist.opacity(0.82))
                         }
 
                         Spacer()
@@ -133,6 +144,29 @@ struct CombatStageView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 22, style: .continuous)
                             .fill(Palette.parchment.opacity(0.08))
+                    )
+                }
+            }
+        }
+    }
+
+    private var logDeck: some View {
+        StageCard(title: "Gefechtsprotokoll", subtitle: "Regelereignisse und Rundenauswertung") {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(Array(appState.scene.log.suffix(6).reversed())) { entry in
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("KR \(entry.round)")
+                            .font(.caption2.weight(.bold))
+                            .foregroundStyle(Palette.sand)
+                        Text(entry.message)
+                            .font(.footnote)
+                            .foregroundStyle(Palette.parchment)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(14)
+                    .background(
+                        RoundedRectangle(cornerRadius: 18, style: .continuous)
+                            .fill(Palette.parchment.opacity(0.06))
                     )
                 }
             }

@@ -5,10 +5,12 @@ final class CombatAppState: ObservableObject {
     @Published var activePanel: AppPanel = .combat
     @Published var selectedCombatantID: Combatant.ID?
     @Published var initiativeFilter: InitiativeFilter = .all
-    @Published var scene: CombatSceneSnapshot = CombatSceneSnapshot(
-        title: "Ritual am Obsidian-Tor",
-        round: 3,
-        combatants: [
+    @Published var scene: CombatSceneSnapshot
+
+    private var rules = InitiativeRuleEngine()
+
+    init() {
+        let combatants = [
             Combatant(
                 name: "Liora Venn",
                 role: .pc,
@@ -31,7 +33,6 @@ final class CombatAppState: ObservableObject {
                 name: "Torwache A",
                 role: .npc,
                 initiativeBase: 9,
-                specialAbility: nil,
                 conditions: [.surprised],
                 woundTrack: WoundTrack(marks: [true, true, true, false, false, false, false, false, false, false, false, false, false, false, false, false]),
                 note: "Verteidigt den Steg."
@@ -45,21 +46,19 @@ final class CombatAppState: ObservableObject {
                 woundTrack: WoundTrack(marks: [true, true, true, true, false, false, false, false, false, false, false, false, false, false, false, false]),
                 note: "Bereitet Fokusaktion vor."
             )
-        ],
-        initiative: [
-            InitiativeRoll(combatantID: UUID(uuidString: "11111111-1111-1111-1111-111111111111") ?? UUID(), combatantName: "Liora Venn", action: .bonus, initiative: 31, isCriticalSuccess: true, isCriticalFailure: false),
-            InitiativeRoll(combatantID: UUID(uuidString: "11111111-1111-1111-1111-111111111111") ?? UUID(), combatantName: "Liora Venn", action: .main, initiative: 31, isCriticalSuccess: true, isCriticalFailure: false),
-            InitiativeRoll(combatantID: UUID(uuidString: "22222222-2222-2222-2222-222222222222") ?? UUID(), combatantName: "Iven Marr", action: .main, initiative: 18, isCriticalSuccess: false, isCriticalFailure: false),
-            InitiativeRoll(combatantID: UUID(uuidString: "33333333-3333-3333-3333-333333333333") ?? UUID(), combatantName: "Kult-Adept", action: .main, initiative: 16, isCriticalSuccess: false, isCriticalFailure: false),
-            InitiativeRoll(combatantID: UUID(uuidString: "44444444-4444-4444-4444-444444444444") ?? UUID(), combatantName: "Torwache A", action: .move, initiative: 9, isCriticalSuccess: false, isCriticalFailure: true)
         ]
-    )
 
-    init() {
-        if let firstCombatant = scene.combatants.first {
-            selectedCombatantID = firstCombatant.id
-        }
-        remapSampleInitiativeToCombatants()
+        let seededScene = CombatSceneSnapshot(
+            title: "Ritual am Obsidian-Tor",
+            round: 0,
+            combatants: combatants,
+            initiative: [],
+            log: [CombatLogEntry(round: 0, message: "Neue Szene vorbereitet.")]
+        )
+
+        self.scene = seededScene
+        self.selectedCombatantID = combatants.first?.id
+        startNextRound()
     }
 
     var selectedCombatant: Combatant? {
@@ -79,25 +78,48 @@ final class CombatAppState: ObservableObject {
         }
     }
 
+    var pcsCount: Int {
+        scene.combatants.filter { $0.role == .pc }.count
+    }
+
+    var npcsCount: Int {
+        scene.combatants.filter { $0.role == .npc }.count
+    }
+
+    var readyCombatantsCount: Int {
+        scene.combatants.filter { !$0.isIncapacitated }.count
+    }
+
     func selectCombatant(_ combatant: Combatant) {
         selectedCombatantID = combatant.id
     }
 
-    func advanceRoundPreview() {
-        scene.round += 1
+    func startNextRound() {
+        let nextRound = scene.round + 1
+        let resolution = rules.buildNextRound(from: scene.combatants, round: nextRound)
+        scene.round = nextRound
+        scene.combatants = resolution.combatants
+        scene.initiative = resolution.initiative
+        scene.log.append(contentsOf: resolution.log)
     }
 
-    private func remapSampleInitiativeToCombatants() {
-        let idsByName = Dictionary(uniqueKeysWithValues: scene.combatants.map { ($0.name, $0.id) })
-        scene.initiative = scene.initiative.map { roll in
-            InitiativeRoll(
-                combatantID: idsByName[roll.combatantName] ?? roll.combatantID,
-                combatantName: roll.combatantName,
-                action: roll.action,
-                initiative: roll.initiative,
-                isCriticalSuccess: roll.isCriticalSuccess,
-                isCriticalFailure: roll.isCriticalFailure
-            )
+    func toggleCondition(_ condition: CombatCondition, for combatantID: UUID) {
+        guard let index = scene.combatants.firstIndex(where: { $0.id == combatantID }) else { return }
+        if scene.combatants[index].conditions.contains(condition) {
+            scene.combatants[index].conditions.remove(condition)
+        } else {
+            scene.combatants[index].conditions.insert(condition)
         }
+        let action = scene.combatants[index].conditions.contains(condition) ? "aktiviert" : "deaktiviert"
+        scene.log.append(CombatLogEntry(round: scene.round, message: "\(scene.combatants[index].name): \(condition.rawValue) \(action)."))
+        scene = scene
+    }
+
+    func toggleWoundMark(for combatantID: UUID, at index: Int) {
+        guard let combatantIndex = scene.combatants.firstIndex(where: { $0.id == combatantID }) else { return }
+        scene.combatants[combatantIndex].woundTrack.toggleMark(at: index)
+        let summary = scene.combatants[combatantIndex].woundSummary
+        scene.log.append(CombatLogEntry(round: scene.round, message: "\(scene.combatants[combatantIndex].name): Wundmonitor geändert (\(summary))."))
+        scene = scene
     }
 }

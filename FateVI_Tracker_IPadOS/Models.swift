@@ -16,7 +16,7 @@ enum CombatActionType: String, CaseIterable, Codable, Identifiable {
     var id: String { rawValue }
 }
 
-enum CombatCondition: String, CaseIterable, Codable, Identifiable {
+enum CombatCondition: String, CaseIterable, Codable, Identifiable, Hashable {
     case surprised = "Überrascht"
     case dazed = "Benommen"
     case incapacitated = "Aktionsunfähig"
@@ -24,10 +24,17 @@ enum CombatCondition: String, CaseIterable, Codable, Identifiable {
     var id: String { rawValue }
 }
 
-struct WoundTrack: Codable, Hashable {
-    var marks: [Bool]
+struct WoundPenalty: Hashable {
+    let qm: Int
+    let bew: Int
+}
 
+struct WoundTrack: Codable, Hashable {
     static let columnCount = 16
+    static let qmValues = [0, 0, 0, 0, 0, 0, 0, 1, 2, 3, 4, 7, 8, 9, 12, 15]
+    static let bewValues = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 2, 3, 5, 7]
+
+    var marks: [Bool]
 
     init(marks: [Bool] = Array(repeating: false, count: WoundTrack.columnCount)) {
         var normalized = Array(repeating: false, count: WoundTrack.columnCount)
@@ -40,6 +47,21 @@ struct WoundTrack: Codable, Hashable {
     var highestMarkedIndex: Int? {
         marks.lastIndex(where: { $0 })
     }
+
+    var penalty: WoundPenalty {
+        guard let highestMarkedIndex else {
+            return WoundPenalty(qm: 0, bew: 0)
+        }
+        return WoundPenalty(
+            qm: WoundTrack.qmValues[highestMarkedIndex],
+            bew: WoundTrack.bewValues[highestMarkedIndex]
+        )
+    }
+
+    mutating func toggleMark(at index: Int) {
+        guard marks.indices.contains(index) else { return }
+        marks[index].toggle()
+    }
 }
 
 struct Combatant: Identifiable, Codable, Hashable {
@@ -51,6 +73,10 @@ struct Combatant: Identifiable, Codable, Hashable {
     var conditions: Set<CombatCondition>
     var woundTrack: WoundTrack
     var note: String
+    var manualRollOverride: Int?
+    var lastRoll: Int?
+    var lastCriticalBonusRoll: Int?
+    var totalInitiative: Int?
 
     init(
         id: UUID = UUID(),
@@ -60,7 +86,11 @@ struct Combatant: Identifiable, Codable, Hashable {
         specialAbility: String? = nil,
         conditions: Set<CombatCondition> = [],
         woundTrack: WoundTrack = WoundTrack(),
-        note: String = ""
+        note: String = "",
+        manualRollOverride: Int? = nil,
+        lastRoll: Int? = nil,
+        lastCriticalBonusRoll: Int? = nil,
+        totalInitiative: Int? = nil
     ) {
         self.id = id
         self.name = name
@@ -70,17 +100,50 @@ struct Combatant: Identifiable, Codable, Hashable {
         self.conditions = conditions
         self.woundTrack = woundTrack
         self.note = note
+        self.manualRollOverride = manualRollOverride
+        self.lastRoll = lastRoll
+        self.lastCriticalBonusRoll = lastCriticalBonusRoll
+        self.totalInitiative = totalInitiative
     }
 }
 
 struct InitiativeRoll: Identifiable, Hashable {
-    let id = UUID()
+    let id: UUID
     let combatantID: UUID
     let combatantName: String
     let action: CombatActionType
     let initiative: Int
+    let groupInitiative: Int
     let isCriticalSuccess: Bool
     let isCriticalFailure: Bool
+    let rollTotal: Int
+    let criticalBonusRoll: Int?
+    let isSurprised: Bool
+}
+
+struct InitiativeResolution: Hashable {
+    let combatantID: UUID
+    let rollTotal: Int
+    let criticalBonusRoll: Int?
+    let totalInitiative: Int
+    let isCriticalSuccess: Bool
+    let isCriticalFailure: Bool
+    let isSurprised: Bool
+    let actions: [CombatActionType]
+}
+
+struct CombatLogEntry: Identifiable, Hashable {
+    let id: UUID
+    let round: Int
+    let timestamp: Date
+    let message: String
+
+    init(id: UUID = UUID(), round: Int, timestamp: Date = Date(), message: String) {
+        self.id = id
+        self.round = round
+        self.timestamp = timestamp
+        self.message = message
+    }
 }
 
 struct CombatSceneSnapshot {
@@ -88,6 +151,7 @@ struct CombatSceneSnapshot {
     var round: Int
     var combatants: [Combatant]
     var initiative: [InitiativeRoll]
+    var log: [CombatLogEntry]
 }
 
 enum AppPanel: String, CaseIterable, Identifiable {
@@ -126,6 +190,26 @@ extension Combatant {
 
     var tint: Color {
         role == .pc ? Palette.moss : Palette.copper
+    }
+
+    var isIncapacitated: Bool {
+        conditions.contains(.incapacitated)
+    }
+
+    var isSurprised: Bool {
+        conditions.contains(.surprised)
+    }
+
+    var isDazed: Bool {
+        conditions.contains(.dazed)
+    }
+
+    var effectiveQMPenalty: Int {
+        woundTrack.penalty.qm + (isDazed ? 3 : 0)
+    }
+
+    var effectiveBEWPenalty: Int {
+        woundTrack.penalty.bew
     }
 }
 

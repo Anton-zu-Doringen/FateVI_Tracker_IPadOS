@@ -4,11 +4,22 @@ struct SidebarView: View {
     @EnvironmentObject private var appState: CombatAppState
 
     var body: some View {
-        List(selection: $appState.activePanel) {
+        List {
             Section("Bereiche") {
                 ForEach(AppPanel.allCases) { panel in
-                    Label(panel.rawValue, systemImage: icon(for: panel))
-                        .tag(panel)
+                    Button {
+                        appState.activePanel = panel
+                    } label: {
+                        HStack {
+                            Label(panel.rawValue, systemImage: icon(for: panel))
+                            Spacer()
+                            if appState.activePanel == panel {
+                                Image(systemName: "arrow.right.circle.fill")
+                                    .foregroundStyle(Palette.moss)
+                            }
+                        }
+                    }
+                    .buttonStyle(.plain)
                 }
             }
 

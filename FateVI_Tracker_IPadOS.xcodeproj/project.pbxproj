@@ -16,6 +16,8 @@
 		A00000000000000000000017 /* CombatStageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000007 /* CombatStageView.swift */; };
 		A00000000000000000000018 /* InspectorDeckView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000008 /* InspectorDeckView.swift */; };
 		A00000000000000000000019 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A00000000000000000000009 /* Assets.xcassets */; };
+		A0000000000000000000001A /* CombatRules.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000000B /* CombatRules.swift */; };
+		A0000000000000000000001B /* PixelsBluetoothService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000000000000000000000C /* PixelsBluetoothService.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +31,8 @@
 		A00000000000000000000008 /* InspectorDeckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InspectorDeckView.swift; sourceTree = "<group>"; };
 		A00000000000000000000009 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A0000000000000000000000A /* FateVI_Tracker_IPadOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = FateVI_Tracker_IPadOS.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0000000000000000000000B /* CombatRules.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CombatRules.swift; sourceTree = "<group>"; };
+		A0000000000000000000000C /* PixelsBluetoothService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelsBluetoothService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,10 +63,12 @@
 				A00000000000000000000002 /* Models.swift */,
 				A00000000000000000000003 /* DesignSystem.swift */,
 				A00000000000000000000004 /* AppState.swift */,
+				A0000000000000000000000B /* CombatRules.swift */,
 				A00000000000000000000005 /* RootView.swift */,
 				A00000000000000000000006 /* SidebarView.swift */,
 				A00000000000000000000007 /* CombatStageView.swift */,
 				A00000000000000000000008 /* InspectorDeckView.swift */,
+				A0000000000000000000000C /* PixelsBluetoothService.swift */,
 				A00000000000000000000009 /* Assets.xcassets */,
 			);
 		};
@@ -143,11 +149,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				A00000000000000000000014 /* AppState.swift in Sources */,
+				A0000000000000000000001A /* CombatRules.swift in Sources */,
 				A00000000000000000000017 /* CombatStageView.swift in Sources */,
 				A00000000000000000000013 /* DesignSystem.swift in Sources */,
 				A00000000000000000000011 /* FateVI_Tracker_IPadOSApp.swift in Sources */,
 				A00000000000000000000018 /* InspectorDeckView.swift in Sources */,
 				A00000000000000000000012 /* Models.swift in Sources */,
+				A0000000000000000000001B /* PixelsBluetoothService.swift in Sources */,
 				A00000000000000000000015 /* RootView.swift in Sources */,
 				A00000000000000000000016 /* SidebarView.swift in Sources */,
 			);
